@@ -121,7 +121,7 @@ namespace Practical_Task_5 {
             }
             */
 
-            return null;
+            return coefficients;
         }
 
         /*
@@ -144,15 +144,209 @@ namespace Practical_Task_5 {
                         f(1)    -> 2.75
                         f(-1)   -> 1.25
         */
+        // polynomial interpolation using the interpolation theorem
         public static Func<double, double> PolyInterpolation(double[,] DP) {
             
             DP = null;
 
-            /* Replace this with your code */
+            // TODO implement Horner scheme
             return (x) => {
                 return x;
             };
         }
+
+        // METHODS TAKEN FROM PRACTICAL TASK 4 ===============================================================================================================================
+
+        // Prints the matrix to the console
+        private static void PrintSolution(double[] solution) {
+            // print array solution with formating
+            Console.Write("Solution:\n{ ");
+            for (int i = 0; i < solution.Length; i++) {
+                Console.Write($"x{i + 1}={solution[i]}, ");
+            }
+            Console.WriteLine("}");
+        }
+
+        // Prints the matrix to the console
+        public static void PrintMatrix(double[,] S) {
+            for (int i = 0; i < S.GetLength(0); i++) {
+                for (int j = 0; j < S.GetLength(1); j++) {
+                    Console.Write($"{S[i, j]} ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+        }
+
+        // Swaps rows of a matrix in memory reference
+        public static void SwapRows(double[,] S, int target, int destination) {
+            // guard clause
+            int height = S.GetLength(0);
+            int width = S.GetLength(1);
+            if (target >= height || destination >= height || target < 0 || destination < 0) throw new IndexOutOfRangeException("Row index out of range.");
+            double[] tmp = new double[width];
+
+            // swap rows
+            for (int i = 0; i < width; i++) {
+                tmp[i] = S[destination, i]; // evacuate destination row
+                S[destination, i] = S[target, i]; // write target row
+                S[target, i] = tmp[i]; // save destination row
+            }
+        }
+
+        // Scales row of a matrix in memory reference
+        public static void ScaleRow(double[,] S, int target, double factor) {
+            // guard clause
+
+            int height = S.GetLength(0);
+            int width = S.GetLength(1);
+            if (target >= height || target < 0) throw new IndexOutOfRangeException("Row index out of range.");
+            if (factor == double.NaN || double.IsInfinity(factor)) throw new ArgumentException("Scale must be a valid number.");
+
+            // scale row by a factor
+            for (int i = 0; i < width; i++) {
+                S[target, i] *= (double)factor; // scaled element
+            }
+        }
+
+        // Adds two rows of a matrix in memory reference
+        public static void AddRows(double[,] S, int target, int addition) {
+            // guard clause
+            int width = S.GetLength(1);
+            int height = S.GetLength(0);
+            if (target >= height || addition >= height || target < 0 || addition < 0) throw new IndexOutOfRangeException("Row index out of range.");
+
+            // add rows
+            for (int i = 0; i < width; i++) {
+                S[target, i] += S[addition, i]; // add element
+            }
+        }
+
+        // Adds two rows of a matrix in memory reference
+        public static void AddRows(double[,] S, int target, double[] addition) {
+            // guard clause
+            int width = S.GetLength(1);
+            int height = S.GetLength(0);
+            if (target >= height || target < 0 || addition.Length != width) throw new IndexOutOfRangeException("Row index out of range.");
+
+            // add rows
+            for (int i = 0; i < width; i++) {
+                S[target, i] += addition[i]; // add element
+            }
+        }
+
+        // sorts the matrix into row echelon form
+        public static void RowEchelonForm(double[,] S, int current) {
+            // int row = 0;
+            int height = S.GetLength(0);
+            int index = current + 1;
+            for (int row = current; row < height; row++) {
+
+                while (S[row, row] == 0 && index < height) {
+                    SwapRows(S, row, index);
+                    index++;
+                }
+            }
+        }
+
+        // counts the number of zero rows in a matrix
+        public static int ZeroRows(double[,] S) {
+            int height = S.GetLength(0);
+            int width = S.GetLength(1);
+            int found = 0;
+
+            for (int i = 0; i < height; i++) {
+                bool allZero = true; // reset after each row
+                for (int j = 0; j < width - 1; j++) {
+                    // negative check => element found
+                    if (S[i, j] != 0) {
+                        allZero = false;
+                        break;
+                    }
+                }
+                if (allZero) found++;
+            }
+            return found;
+        }
+
+        // checks for inconsistent rows in a matrix
+        public static bool ConsistentRows(double[,] S) {
+            int height = S.GetLength(0);
+            int width = S.GetLength(1);
+            bool allZero = true;
+
+            for (int i = 0; i < height; i++) {
+                allZero = true;
+                for (int j = 0; j < width - 1; j++) {
+                    if (S[i, j] != 0) allZero = false; // non zero element found
+                }
+                if (S[i, width - 1] != 0 && allZero) return false; // all elements zero but constant non zero
+            }
+            return true;
+        }
+
+        public static double[] SystemSolve(double[,] S) {
+            int height = S.GetLength(0);
+            int width = S.GetLength(1);
+            int row = 0;
+
+            while (row < height && row < width - 1) {
+                // row echelon form
+                if (S[row, row] == 0) RowEchelonForm(S, row);
+
+                try {
+                    // Console.WriteLine($"Scaling row {row} by factor {S[row, row]}");
+                    ScaleRow(S, row, 1 / S[row, row]); // scale to one
+                } catch (Exception e) {
+                    Console.WriteLine(e.Message);
+                    return new double[0]; // no solution
+                }
+
+                for (int i = 0; i < height; i++) {
+                    if (i == row) continue; // dont eliminate self
+                    if (S[i, row] == 0) continue; // skip zero coefficients
+
+                    double[] tmpRow = new double[width]; // place holder for scaled row
+                    for (int j = 0; j < width; j++) {
+                        tmpRow[j] = S[row, j] * -S[i, row]; // copy and scale row
+                    }
+
+                    try {
+                        AddRows(S, i, tmpRow); // eliminate above / below
+                    } catch (Exception e) {
+                        Console.WriteLine(e.Message);
+                        return new double[0]; // no solution
+                    }
+                }
+                row++;
+            }
+
+            // number of linearly independent rows < number of variables => infinitely many solutions
+            if (height - ZeroRows(S) < width - 1) {
+                Console.WriteLine("Infinitely many solutions detected.");
+                return new double[] { };
+            }
+
+            // inconsistency check
+            if (!ConsistentRows(S)) {
+                Console.WriteLine("Inconsistency detected.");
+                PrintMatrix(S);
+                return new double[] { };
+            }
+
+            double[] solution = new double[height - ZeroRows(S)];
+
+            for (int i = 0; i < height - ZeroRows(S); i++) {
+                solution[i] = S[i, width - 1]; // constant column
+            }
+
+            Console.WriteLine("Solved Matrix: ");
+            PrintMatrix(S);
+
+            return solution;
+        }
+
+        // ===================================================================================================================================================================
 
         public static void Main(/* string[] args */) {
 
@@ -171,3 +365,52 @@ namespace Practical_Task_5 {
         }
     }
 }
+
+
+
+/*
+ 
+ 
+ 
+ ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Practical_Task_4{
+    internal class Program{
+
+
+
+
+
+
+
+
+
+
+
+public static void Main(string[] args) {
+    double[,] augmentedMatrix = new double[,] {
+                { 1,  2, -1,  1,  1 },
+                { 2, -1,  3,  2, 22 },
+                { 3,  1,  2, -1,  7 },
+                { 4, -2,  1,  3, 25 }
+            };
+
+    Console.WriteLine("Matrix: ");
+    PrintMatrix(augmentedMatrix);
+
+    // solve system
+    PrintSolution(SystemSolve(augmentedMatrix));
+
+    // HOLD THE LINE (CMD prompt) !!!
+    Console.ReadKey();
+}
+    }
+}
+ 
+ 
+ 
+ */
