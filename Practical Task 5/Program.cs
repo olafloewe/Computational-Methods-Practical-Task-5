@@ -12,9 +12,9 @@ namespace Practical_Task_5 {
         // Prints the matrix to the console
         private static void PrintSolution(double[] solution) {
             // print array solution with formating
-            Console.Write("Solution:\n{ ");
+            Console.Write("Solution(s):\n{ ");
             for (int i = 0; i < solution.Length; i++) {
-                Console.Write($"x{i + 1}={solution[i]}, ");
+                Console.Write($"a{i + 1}={solution[i]}, ");
             }
             Console.WriteLine("}");
         }
@@ -336,17 +336,34 @@ namespace Practical_Task_5 {
         // polynomial interpolation using the interpolation theorem
         public static Func<double, double> PolyInterpolation(double[,] DP) {
 
+            // construct linear system matrix from data points
+            double[,] linearSystemMatrix = ConstructMatrix(DP);
+            // solve equations for coefficients
+            double[] coefficients = SystemSolve(linearSystemMatrix);
+
+            // smallest and largest X values
+            int min;
+            int max;
 
 
 
+            PrintSolution(coefficients);
 
             // TODO find range of valid inputs
-
-
-
-            // TODO implement Horner scheme
             return (x) => {
-                return x;
+                // guard clause for out of bound arguments
+                if(min > x || x > max) throw new ArgumentOutOfRangeException("Error: out of bound argument");
+
+                double[] solutions = new double[coefficients.Length];
+
+                // horner schema
+                solutions[0] = coefficients[0];
+                for (int i = 1; i < coefficients.Length; i++) {
+                    solutions[i] = (solutions[i - 1] * x) + coefficients[i] ;
+                }
+
+                // return last element of horner schema calculation
+                return solutions[solutions.Length-1];
             };
         }
 
@@ -360,11 +377,10 @@ namespace Practical_Task_5 {
             dataPoints = FormatPoints(dataPoints);
             PrintDataPoints(dataPoints);
             
-            double[,] linearSystemMatrix = ConstructMatrix(dataPoints);
-            PrintSolution(SystemSolve(linearSystemMatrix));
-
             Func<double,double> f = PolyInterpolation(dataPoints);
-
+            Console.WriteLine(f(0));
+            Console.WriteLine(f(-1));
+            Console.WriteLine(f(2));
 
 
 
