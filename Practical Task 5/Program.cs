@@ -341,11 +341,15 @@ namespace Practical_Task_5 {
             // solve equations for coefficients
             double[] coefficients = SystemSolve(linearSystemMatrix);
 
-            // smallest and largest X values
-            int min;
-            int max;
+            // smallest and largest X values default to first
+            double min = DP[0, 0];
+            double max = DP[0, 0];
 
-
+            // find smallest and largest X values
+            for (int i = 0; i < DP.GetLength(0); i++) {
+                if ((DP[i, 0] < min)) min = DP[i, 0];
+                if ((DP[i, 0] > max)) max = DP[i, 0];
+            }
 
             PrintSolution(coefficients);
 
@@ -378,11 +382,10 @@ namespace Practical_Task_5 {
             PrintDataPoints(dataPoints);
             
             Func<double,double> f = PolyInterpolation(dataPoints);
+
             Console.WriteLine(f(0));
             Console.WriteLine(f(-1));
             Console.WriteLine(f(2));
-
-
 
             // HOLD THE LINE (terminal window) !!!
             Console.ReadLine();
