@@ -16,13 +16,14 @@ namespace Practical_Task_5 {
             for (int i = 0; i < solution.Length; i++) {
                 Console.Write($"a{i + 1}={solution[i]}, ");
             }
-            Console.WriteLine("}");
+            Console.WriteLine("}\n");
         }
 
         // Prints the matrix to the console
         public static void PrintMatrix(double[,] S) {
             for (int i = 0; i < S.GetLength(0); i++) {
                 for (int j = 0; j < S.GetLength(1); j++) {
+                    if(j == S.GetLength(1) - 1) Console.Write("| ");
                     Console.Write($"{S[i, j]} ");
                 }
                 Console.WriteLine();
@@ -313,26 +314,6 @@ namespace Practical_Task_5 {
             return coefficients;
         }
 
-        /*
-            Func<double, double> PolyInterpolation(double[,] DP) {
-                Input:
-                    a two-dimensional array of data points' coordinates
-                Output:
-                    a function that uses Horner's scheme to calculate the value of the interpolating polynomial
-                    for real arguments between the smallest and the largest of the provided data points’
-                    first coordinates.
-                Examples:
-                    PolyInterpolate({{3, 6}, {0, 3}, {2, 1}}) -> f
-                        f(0)    -> 3
-                        f(2)    -> 1
-                        f(2.75) -> 4.375
-                        f(3)    -> 6
-                        f(-1)   -> Error: out of bound argument
-                    PolyInterpolate({{3, 6}, {3, 7}}) -> Error: incorrect data points
-                    PolyInterpolate({{-1, 1.25}, {2, 3.5}}) -> f
-                        f(1)    -> 2.75
-                        f(-1)   -> 1.25
-        */
         // polynomial interpolation using the interpolation theorem
         public static Func<double, double> PolyInterpolation(double[,] DP) {
 
@@ -371,21 +352,22 @@ namespace Practical_Task_5 {
             };
         }
 
-
         public static void Main(/* string[] args */) {
 
             double[,] dataPoints = ReadInputs();
 
-            // DISPLAY CURRENT INPUT
+            // display inputed data
             Console.Clear();
             dataPoints = FormatPoints(dataPoints);
             PrintDataPoints(dataPoints);
             
             Func<double,double> f = PolyInterpolation(dataPoints);
 
-            Console.WriteLine(f(0));
-            Console.WriteLine(f(-1));
-            Console.WriteLine(f(2));
+            Console.WriteLine($"f(0): {f(0)}");
+            Console.WriteLine($"f(2): {f(2)}");
+            Console.WriteLine($"f(2.75): {f(2.75)}");
+            Console.WriteLine($"f(3): {f(3)}");
+            Console.WriteLine($"f(-1): {f(-1)}");
 
             // HOLD THE LINE (terminal window) !!!
             Console.ReadLine();
